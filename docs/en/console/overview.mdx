@@ -9,7 +9,7 @@ The Nidaa console (لوحة نِداء) is where you set up and operate your app
 
 - **Apps & environments** — create an app; each has isolated `dev` and `prod` environments.
 - **API keys** — create SDK keys (`devices:write`) and server keys (`messages:send`, `messages:read`). Plaintext is shown once; rotate by creating a new key, migrating, then revoking the old one.
-- **Providers → FCM** — upload the Firebase file from **your own** Firebase project. See [FCM](/providers/fcm).
+- **Providers → FCM** — upload the **service-account JSON** from **your own** Firebase project. See [FCM](/providers/fcm).
 - **Providers → APNs** — upload your `.p8` key per environment. See [APNs](/providers/apns).
 - **Compose & send** — send a notification from the console; on `prod`, sending to everyone requires a confirmation.
 - **Topics** — create and manage topics; the send target can pick from this list.
