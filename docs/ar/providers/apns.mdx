@@ -1,0 +1,29 @@
+---
+title: APNs (iOS)
+description: APNs بالتوكن مع مفتاح .p8 لكل بيئة.
+---
+
+# APNs
+
+نِداء يرسل إلى iOS مباشرة عبر APNs باستخدام **مفتاح المصادقة `.p8`** الخاص بك.
+
+## الإعداد
+
+في لوحة التحكم، لكل بيئة (**dev** و**prod**)، ارفع:
+
+- ملف المفتاح `.p8`،
+- Team ID (`team_id`)، وKey ID (`key_id`)، وBundle ID (`bundle_id`)،
+- خيار sandbox (`use_sandbox`).
+
+## Sandbox مقابل الإنتاج
+
+- نسخ **dev** (Xcode / debug) تأخذ التوكن من **sandbox** في APNs. فعّل `use_sandbox`.
+- نسخ **prod** (TestFlight / App Store) تستخدم APNs **الإنتاجي**.
+
+توكن sandbox لا يعمل مع الإنتاج، والعكس صحيح. أبقِ البيئتين منفصلتين.
+
+## توكن الجهاز
+
+للإرسال المباشر عبر APNs، سجّل **توكن APNs الخام كنص hex** باستخدام `Nidaa.registerDevice(token: ...)`. لا حاجة إلى Firebase.
+
+أخطاء بيانات الاعتماد (APNs `403`) تجعل الرسالة تفشل بـ `provider_error` وتظهر تنبيهاً في اللوحة. الأجهزة لا تُعطَّل.

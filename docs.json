@@ -2,19 +2,147 @@
   "$schema": "https://docs.page/schema.json",
   "name": "Nidaa | نِداء",
   "description": "Iraq-first push notification platform — API, Flutter SDK and console.",
-  "theme": { "primary": "#3B3FB6", "primaryLight": "#0E9F8E", "primaryDark": "#3B3FB6" },
-  "social": { "github": "devnoaman/nidaa-docs" },
-  "sidebar": [
-    { "group": "Getting Started", "pages": [
-      { "title": "What is Nidaa", "href": "/" },
-      { "title": "Quickstart", "href": "/quickstart" } ] },
-    { "group": "Flutter SDK", "pages": [ { "title": "nidaa_flutter", "href": "/sdk/flutter" } ] },
-    { "group": "REST API", "pages": [
-      { "title": "Devices", "href": "/api/devices" },
-      { "title": "Messages", "href": "/api/messages" } ] },
-    { "group": "Console", "pages": [ { "title": "Overview", "href": "/console/overview" } ] },
-    { "group": "Providers", "pages": [
-      { "title": "FCM (Android)", "href": "/providers/fcm" },
-      { "title": "APNs (iOS)", "href": "/providers/apns" } ] }
-  ]
+  "theme": {
+    "primary": "#3B3FB6",
+    "primaryLight": "#0E9F8E",
+    "primaryDark": "#3B3FB6"
+  },
+  "social": {
+    "github": "devnoaman/nidaa-docs"
+  },
+  "sidebar": {
+    "default": [
+      {
+        "group": "Languages",
+        "pages": [
+          {
+            "title": "English",
+            "href": "/en"
+          },
+          {
+            "title": "العربية",
+            "href": "/ar"
+          }
+        ]
+      }
+    ],
+    "en": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          {
+            "title": "What is Nidaa",
+            "href": "/"
+          },
+          {
+            "title": "Quickstart",
+            "href": "/quickstart"
+          }
+        ]
+      },
+      {
+        "group": "Flutter SDK",
+        "pages": [
+          {
+            "title": "nidaa_flutter",
+            "href": "/sdk/flutter"
+          }
+        ]
+      },
+      {
+        "group": "REST API",
+        "pages": [
+          {
+            "title": "Devices",
+            "href": "/api/devices"
+          },
+          {
+            "title": "Messages",
+            "href": "/api/messages"
+          }
+        ]
+      },
+      {
+        "group": "Console",
+        "pages": [
+          {
+            "title": "Overview",
+            "href": "/console/overview"
+          }
+        ]
+      },
+      {
+        "group": "Providers",
+        "pages": [
+          {
+            "title": "FCM (Android)",
+            "href": "/providers/fcm"
+          },
+          {
+            "title": "APNs (iOS)",
+            "href": "/providers/apns"
+          }
+        ]
+      }
+    ],
+    "ar": [
+      {
+        "group": "البداية",
+        "pages": [
+          {
+            "title": "ما هو نِداء",
+            "href": "/"
+          },
+          {
+            "title": "البدء السريع",
+            "href": "/quickstart"
+          }
+        ]
+      },
+      {
+        "group": "Flutter SDK",
+        "pages": [
+          {
+            "title": "nidaa_flutter",
+            "href": "/sdk/flutter"
+          }
+        ]
+      },
+      {
+        "group": "REST API",
+        "pages": [
+          {
+            "title": "الأجهزة",
+            "href": "/api/devices"
+          },
+          {
+            "title": "الرسائل",
+            "href": "/api/messages"
+          }
+        ]
+      },
+      {
+        "group": "لوحة التحكم",
+        "pages": [
+          {
+            "title": "نظرة عامة",
+            "href": "/console/overview"
+          }
+        ]
+      },
+      {
+        "group": "مزوّدو الإرسال",
+        "pages": [
+          {
+            "title": "FCM (أندرويد)",
+            "href": "/providers/fcm"
+          },
+          {
+            "title": "APNs (iOS)",
+            "href": "/providers/apns"
+          }
+        ]
+      }
+    ]
+  }
 }

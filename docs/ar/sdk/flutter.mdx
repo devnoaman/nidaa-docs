@@ -1,0 +1,111 @@
+---
+title: Flutter SDK
+description: nidaa_flutter لتسجيل التوكنات وربط المستخدمين وإيصالات الفتح.
+---
+
+# nidaa_flutter
+
+الحزمة تسجّل توكنات الأجهزة، وتربط المستخدمين، وترسل إيصالات الفتح. **لا ترسل الرسائل أبداً**. الإرسال (`messages:send`) من الخادم فقط.
+
+## نِداء مو Firebase
+
+الحزمة **لا تعتمد على Firebase إطلاقاً**. الربط يحتاج شيئين فقط: **مفتاح الـ SDK** + **التوكن الذي يوفّره تطبيقك**.
+
+نوع التوكن يجب أن يطابق طريقة الإرسال:
+
+- **أندرويد:** توكن تسجيل FCM.
+- **iOS:** إما **توكن APNs الخام بصيغة hex** (المحرّك يرسل مباشرة عبر `.p8`)، أو توكن FCM إذا كان المحرّك يرسل iOS عبر FCM.
+
+## التثبيت
+
+```yaml
+dependencies:
+  nidaa_flutter:
+    path: ../nidaa_flutter
+```
+
+## التهيئة والتسجيل
+
+```dart
+// 1) Configure Nidaa. No network, no Firebase. Just your SDK key.
+await Nidaa.initialize(
+  baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
+  apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write ONLY
+  userId: currentUser?.id, // optional
+  debug: true,
+);
+
+// 2) YOUR APP gets a push token, however it chooses (pseudocode):
+final String token = await myApp.getPushToken();
+
+// 3) Hand it to Nidaa. platform is detected automatically (android/ios).
+await Nidaa.registerDevice(token: token);
+
+// When your app sees a new token:
+myApp.onPushTokenRefresh((t) => Nidaa.updateToken(t));
+```
+
+<Info>الدالة `Nidaa.initialize` لا تتواصل مع Firebase ولا مع APNs. حزمة `nidaa_flutter` **بدون أي اعتماد على Firebase**. جلب التوكن مسؤولية تطبيقك.</Info>
+
+### أندرويد: توكن FCM (Firebase اعتماد اختياري في تطبيقك)
+
+في أندرويد يجب أن يكون التوكن توكن FCM. طريقة شائعة: أضف `firebase_messaging` إلى `pubspec.yaml` **الخاص بتطبيقك** (وليس جزءاً من SDK نِداء):
+
+```dart
+// In YOUR app, using YOUR optional firebase_messaging dependency:
+final token = await FirebaseMessaging.instance.getToken();
+if (token != null) await Nidaa.registerDevice(token: token);
+FirebaseMessaging.instance.onTokenRefresh.listen(Nidaa.updateToken);
+```
+
+### iOS المسار B: توكن APNs الخام بصيغة hex (بدون Firebase)
+
+عندما يرسل المحرّك إلى iOS مباشرة عبر APNs (`.p8`)، سجّل **توكن APNs الخام كنص hex**. اجلبه من الكود الأصلي، مثلاً من `didRegisterForRemoteNotificationsWithDeviceToken` عبر `MethodChannel` خاص بك:
+
+```dart
+// YOUR app's platform channel (pseudocode). No Firebase involved.
+const channel = MethodChannel('myapp/apns');
+final String apnsHex = await channel.invokeMethod('getAPNSToken');
+await Nidaa.registerDevice(token: apnsHex);
+```
+
+## تمرير الرسائل وحالات الفتح
+
+الـ SDK لا يستقبل الإشعارات بنفسه. تطبيقك يمرّر ما يستقبله من أي إضافة Push يستخدمها:
+
+```dart
+// Pseudocode: call these from YOUR app's push handlers.
+void onForegroundPush(Map<String, dynamic> data, {String? title, String? body}) =>
+    Nidaa.handleMessage(NidaaMessage.fromData(data, title: title, body: body));
+
+void onNotificationTapped(Map<String, dynamic> data) =>
+    Nidaa.handleOpen(NidaaMessage.fromData(data)); // also for the launch message
+
+Nidaa.onMessage.listen((m) => print('foreground: ${m.title}'));
+Nidaa.onOpen.listen((m) => router.go(m.deepLink ?? '/'));
+```
+
+إيصالات الفتح تحتاج معرّف الرسالة داخل بيانات الإشعار باسم `nidaa_message_id` (أو `message_id`).
+
+## المواضيع والمستخدمون وإلغاء الاشتراك
+
+```dart
+await Nidaa.subscribeToTopic('news');
+await Nidaa.setUserId('u_123'); // after login
+await Nidaa.clearUserId();      // on logout
+await Nidaa.unregister();       // opt-out
+```
+
+## SDK ↔ REST
+
+| SDK | REST |
+| --- | --- |
+| `initialize` | لا شيء (إعداد فقط، بدون اتصال) |
+| `registerDevice(token:)` / `updateToken(t)` / إعادة المزامنة التلقائية | `POST /v1/devices` (إعادة محاولة تصاعدية) |
+| `setUserId(id)` / `clearUserId()` | `PATCH /v1/devices/{token}` `{"user_id": id \| null}` |
+| `unregister()` | `DELETE /v1/devices/{token}` |
+| `subscribeToTopic` / `unsubscribeFromTopic` / `listTopics` | `PUT` / `DELETE` / `GET /v1/devices/{token}/topics[/{topic}]` |
+| `handleMessage(m)` → `onMessage` | لا شيء (stream محلي) |
+| `handleOpen(m)` → `onOpen` | `POST /v1/messages/{id}/opens` (مرة واحدة لكل id) |
+
+<Warning>لا تضع مفتاح `messages:send` داخل التطبيق أبداً.</Warning>

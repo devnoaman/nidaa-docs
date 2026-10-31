@@ -1,0 +1,61 @@
+---
+title: البدء السريع
+description: من تطبيق جديد إلى أول إشعار.
+---
+
+# البدء السريع
+
+## 1. أنشئ تطبيقاً في لوحة التحكم
+
+أنشئ تطبيقاً واختر البيئة (`dev` أو `prod`). ارفع بيانات المزوّد. راجع [FCM](/providers/fcm) و[APNs](/providers/apns).
+
+## 2. أنشئ مفتاحين
+
+| المفتاح | الصلاحية | مكانه |
+| --- | --- | --- |
+| مفتاح SDK | `devices:write` | داخل التطبيق (عبر `--dart-define`) |
+| مفتاح الخادم | `messages:send` | في الخادم فقط |
+
+يظهر المفتاح الكامل **مرة واحدة فقط** عند إنشائه.
+
+## 3. سجّل الجهاز من Flutter
+
+```dart
+await Nidaa.initialize(
+  baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
+  apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write only
+);
+
+// Your app supplies the push token (pseudocode):
+// Android: FCM token, e.g. via firebase_messaging in YOUR app (optional, not part of the SDK)
+// iOS path B: raw APNs hex token via your own MethodChannel (no Firebase)
+final String token = await myApp.getPushToken();
+
+await Nidaa.registerDevice(token: token);
+await Nidaa.setUserId('u_123'); // after login
+```
+
+حزمة `nidaa_flutter` لا تعتمد على Firebase. تطبيقك هو من يجلب التوكن. راجع [Flutter SDK](/sdk/flutter) لأمثلة أندرويد وiOS.
+
+## 4. أرسل من الخادم
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/messages \
+  -H "Authorization: Bearer $NIDAA_SERVER_KEY" \
+  -H "Idempotency-Key: order-ord_789-driver-arrived" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": { "user_id": "u_123" },
+    "priority": "transactional",
+    "notification": { "title": "سائقك وصل", "body": "السائق بانتظارك عند الباب" },
+    "data": { "order_id": "ord_789" }
+  }'
+```
+
+الرد `202 Accepted`:
+
+```json
+{ "id": "0192…", "status": "queued" }
+```
+
+تابع الحالة عبر `GET /v1/messages/{id}` (يحتاج `messages:read`). راجع [الرسائل](/api/messages).

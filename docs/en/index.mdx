@@ -1,0 +1,49 @@
+---
+title: What is Nidaa
+description: Nidaa (نِداء) is an Iraq-first push notification SaaS.
+---
+
+# Nidaa | نِداء
+
+Nidaa is an **Iraq-first push notification platform**. Developers integrate with Nidaa through:
+
+- the **REST API** (`/v1`) — send messages from your backend,
+- the **Flutter SDK** (`nidaa_flutter`) — register device tokens, bind users, report opens,
+- the **console** — manage apps, keys, provider credentials, and compose sends.
+
+## Honest transport
+
+Nidaa does not replace Apple or Google's delivery networks. The **last mile is still APNs (iOS) and FCM (Android)**. Nidaa's engine holds your provider credentials and talks to APNs/FCM for you — you never send from the Firebase console.
+
+## Zero Firebase dependencies in the SDK
+
+The Flutter SDK has **zero Firebase dependencies** (no `firebase_core`, no `firebase_messaging`). It does not request permission, fetch tokens, or listen for pushes. Your app obtains the push token however it likes and passes it to `Nidaa.registerDevice(token: ...)`.
+
+## Tenancy
+
+```
+org ──< app ──< environment (dev | prod) ──< api_key
+                                         ├──< provider_credential (apns | fcm)
+                                         ├──< device
+                                         └──< message ──< message_delivery
+```
+
+`dev` and `prod` are fully isolated (devices, messages, credentials, keys).
+
+## Authentication
+
+Send your key as `Authorization: Bearer <api_key>` **or** `X-Nidaa-Key: <api_key>`. The key determines org, app, and environment.
+
+Key format: `nd_live_…` (prod) / `nd_test_…` (dev).
+
+| Scope | Used by | Allows |
+| --- | --- | --- |
+| `devices:write` | Flutter SDK (client key) | register / update / unregister device, open receipts |
+| `messages:send` | Your backend (server key) | `POST /v1/messages` |
+| `messages:read` | Your backend | `GET /v1/messages/{id}` |
+
+<Warning>SDK keys must never carry `messages:send` — they ship inside the app binary.</Warning>
+
+## Base URL
+
+Production base URL is **TBD**. For local development the engine root is `http://127.0.0.1:8080`, with all paths under `/v1`.

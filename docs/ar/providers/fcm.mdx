@@ -1,0 +1,29 @@
+---
+title: FCM (أندرويد)
+description: مشروع Firebase الخاص بك وحساب الخدمة الخاص بك، ونِداء يرسل عنك.
+---
+
+# FCM
+
+نِداء يرسل إشعارات أندرويد عبر **مشروع Firebase الخاص بك**. نِداء لا يوفّر مشروع Firebase مشتركاً، وليس وسيطاً على طريقة OneSignal. أنت لا ترسل من لوحة Firebase أبداً.
+
+## ملفان مختلفان من Firebase
+
+| الملف | مكانه | الغرض |
+| --- | --- | --- |
+| Service-account JSON | **لوحة نِداء** (لكل بيئة) | يسمح لعامل نِداء **بالإرسال** إلى مشروع FCM الخاص بك |
+| `google-services.json` / `GoogleService-Info.plist` | **داخل تطبيقك فقط** | يسمح لتطبيقك **باستقبال** الإشعارات والحصول على توكن FCM |
+
+<Warning>لا ترفع `google-services.json` إلى اللوحة. هذا الملف ليس بيانات إرسال. اللوحة تحتاج ملف service-account JSON.</Warning>
+
+## الإعداد
+
+1. أنشئ مشروع Firebase خاصاً بك، وأضف تطبيق أندرويد (وiOS إذا احتجت).
+2. ضع `google-services.json` / `GoogleService-Info.plist` في **تطبيقك** ليستقبل الإشعارات ويحصل على توكن FCM (مثلاً عبر `firebase_messaging`).
+3. في Firebase، أنشئ مفتاح **service account** بصيغة JSON للمشروع.
+4. في لوحة نِداء: **البيئة ← المزوّدون ← FCM**، ارفع ملف service-account JSON. يُخزَّن **مشفّراً لكل بيئة** (`dev` / `prod`) ولا يُعاد من أي API.
+5. مرّر توكن FCM إلى `Nidaa.registerDevice(token: ...)`.
+
+بعدها يستخدم عامل نِداء حساب الخدمة الخاص بك للإرسال إلى مشروع FCM الخاص بك.
+
+<Info>حزمة نِداء لـ Flutter لا تعتمد على Firebase. إعدادات Firebase موجودة في تطبيقك فقط.</Info>

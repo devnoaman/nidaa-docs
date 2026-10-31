@@ -1,0 +1,89 @@
+---
+title: الرسائل
+description: إرسال الرسائل وقراءة حالتها والإبلاغ عن الفتح.
+---
+
+# الرسائل
+
+## POST /v1/messages — إرسال
+
+الصلاحية: `messages:send`. الترويسة `Idempotency-Key: <string ≤ 128>` (موصى بها بشدة).
+
+حدّد واحداً فقط من: `to.user_id` أو `to.device_tokens` أو `to.topic`:
+
+```json
+{
+  "to": { "user_id": "u_123" },
+  "priority": "transactional",
+  "ttl": 3600,
+  "notification": { "title": "سائقك وصل", "body": "السائق بانتظارك عند الباب" },
+  "data": { "order_id": "ord_789", "type": "driver_arrived" },
+  "deep_link": "sahel://orders/ord_789",
+  "collapse_key": "order_ord_789"
+}
+```
+
+- `to.device_tokens`: مصفوفة، حدّ أقصى 500 (الحد النهائي لم يُحدَّد). `to.topic`: مرفوض في المرحلة 1.
+- `priority`: `transactional` (الافتراضي) أو `marketing`.
+- `ttl`: بالثواني، من 0 إلى 2419200. الافتراضي 86400.
+- `data`: قاموس نصوص مسطّح. الحجم الكلي ≤ 4 KB.
+- بدون `notification` تصبح الرسالة بيانات فقط (صامتة).
+
+الرد `202 Accepted`:
+
+```json
+{ "id": "0192…", "status": "queued" }
+```
+
+### منع التكرار (Idempotency)
+
+- نفس `Idempotency-Key` + نفس المحتوى ← `202` بنفس `id` الأصلي، مع الترويسة `Idempotent-Replayed: true`.
+- نفس المفتاح + محتوى مختلف ← `409 validation_error`.
+
+الأخطاء: `400 validation_error`، `401 unauthorized`، `403 unauthorized` (صلاحية ناقصة)، `429 rate_limited`.
+
+## GET /v1/messages/\{id\} — الحالة
+
+الصلاحية: `messages:read`.
+
+```json
+{
+  "id": "0192…",
+  "status": "completed",
+  "priority": "transactional",
+  "created_at": "2026-10-29T09:30:00Z",
+  "completed_at": "2026-10-29T09:30:01Z",
+  "counts": { "targets": 2, "sent": 2, "failed": 0, "delivered": 1, "opened": 1 },
+  "deliveries": [
+    { "device_id": "…", "platform": "ios", "status": "opened", "error_code": null, "updated_at": "…" }
+  ]
+}
+```
+
+حالة الرسالة: `queued` ← `processing` ← `completed` / `partial` / `failed` / `no_targets`. قائمة `deliveries` محدودة بـ 100. يرجع `404` إذا لم توجد الرسالة في هذه البيئة.
+
+حالة التوصيل: `accepted` (في الطابور للمزوّد)، `sent` (نجح APNs/FCM)، `delivered` (فقط عندما يبلّغ الـ SDK)، `opened` (إيصال فتح من الـ SDK)، `failed` (رفضه المزوّد).
+
+## POST /v1/messages/\{id\}/opens — إيصال الفتح
+
+الصلاحية: `devices:write`. يرسله الـ SDK تلقائياً عبر `handleOpen`.
+
+```json
+{ "token": "device-token", "opened_at": "2026-10-29T09:31:00Z" }
+```
+
+الرد `202 Accepted`. لا يتكرر لنفس (الرسالة، الجهاز).
+
+## الأخطاء
+
+```json
+{ "error": { "code": "validation_error", "message": "to: exactly one of user_id, device_tokens, topic is required" } }
+```
+
+| code | HTTP |
+| --- | --- |
+| `unauthorized` | 401 / 403 |
+| `rate_limited` | 429 (`Retry-After`) |
+| `invalid_token` | 404 / 400 |
+| `validation_error` | 400 / 409 |
+| `provider_error` | 502 |

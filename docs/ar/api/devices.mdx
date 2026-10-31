@@ -1,0 +1,53 @@
+---
+title: الأجهزة
+description: تسجيل توكنات الأجهزة وتحديثها وإلغاؤها.
+---
+
+# الأجهزة
+
+كل المسارات تحتاج صلاحية `devices:write`. التوكن داخل المسار يكون URL-encoded.
+
+## POST /v1/devices — تسجيل أو تحديث
+
+يحدّث الجهاز إذا كان (البيئة، التوكن) موجوداً. إعادة تسجيل توكن معطّل تعيد تفعيله.
+
+```json
+{
+  "platform": "android",
+  "token": "fcm-registration-token",
+  "user_id": "u_123",
+  "locale": "ar-IQ",
+  "app_version": "3.4.1",
+  "tags": { "city": "baghdad" }
+}
+```
+
+`platform`: `ios` أو `android`. حقل `tags` يُخزَّن فقط في المرحلة 1.
+
+الرد `201 Created` (جديد) أو `200 OK` (تحديث):
+
+```json
+{ "id": "0192…", "token": "fcm-registration-token", "platform": "android", "user_id": "u_123", "disabled": false, "last_seen_at": "2026-10-29T09:30:00Z" }
+```
+
+الأخطاء: `400 validation_error`، `401 unauthorized`، `429 rate_limited`.
+
+## DELETE /v1/devices/\{token\} — إلغاء التسجيل
+
+الرد `204 No Content`. التوكن غير المعروف يعطي `204` أيضاً.
+
+بديل: `POST /v1/devices/unregister` مع `{ "token": "…" }`.
+
+## PATCH /v1/devices/\{token\} — ربط المستخدم أو فكّه
+
+```json
+{ "user_id": "u_123" }
+```
+
+أرسل `{ "user_id": null }` لفك الربط عند تسجيل الخروج. يمكن أيضاً تحديث `locale` و`app_version` و`tags`.
+
+الرد `200 OK` (كائن الجهاز). `404 invalid_token` إذا لم يكن التوكن مسجلاً.
+
+## تنظيف التوكنات
+
+إذا ردّ APNs بـ `410 Unregistered` أو `400 BadDeviceToken`، أو ردّ FCM بـ `UNREGISTERED` أو `INVALID_ARGUMENT`، يُعطَّل الجهاز ويُتجاوَز حتى يُسجَّل من جديد.
