@@ -1,17 +1,29 @@
 ---
 title: FCM (Android)
-description: Customer-owned Firebase project.
+description: Your own Firebase project, your service account — Nidaa sends for you.
 ---
 
 # FCM
 
-**You own your Firebase project.** Nidaa does not provide a Firebase project for you, and you never send from the Firebase console.
+Nidaa sends Android pushes through **your own Firebase project**. Nidaa does not provide a shared Firebase project for you, and it is not a OneSignal-style relay. You never send from the Firebase console.
+
+## Two different Firebase files
+
+| File | Where it goes | Purpose |
+| --- | --- | --- |
+| Service-account JSON | **Nidaa console** (per environment) | Lets the Nidaa worker **send** into your FCM project |
+| `google-services.json` / `GoogleService-Info.plist` | **Your app only** | Lets your app **receive** pushes and get an FCM token |
+
+<Warning>Don't upload `google-services.json` to the console. It isn't a send credential. The console needs the service-account JSON.</Warning>
 
 ## Setup
 
-1. Use your own Firebase project for your Android app.
-2. `google-services.json` goes in **your app** so it can obtain FCM registration tokens (e.g. via `firebase_messaging`).
-3. In the console: **Environment → Providers → FCM**, upload the credential for that environment. The `project_id` must match your file.
-4. Pass the FCM token to `Nidaa.registerDevice(token: ...)`.
+1. Create your own Firebase project and add your Android (and, if needed, iOS) app.
+2. Add `google-services.json` / `GoogleService-Info.plist` to **your app** so it can receive pushes and get FCM registration tokens (e.g. via `firebase_messaging`).
+3. In Firebase, create a **service account** key (JSON) for the project.
+4. In the Nidaa console: **Environment → Providers → FCM**, upload the service-account JSON. It is stored **encrypted per environment** (`dev` / `prod`) and is never returned by any API.
+5. Pass the FCM token to `Nidaa.registerDevice(token: ...)`.
 
-<Info>The Nidaa SDK itself has no Firebase dependency — Firebase lives only in your app.</Info>
+The Nidaa worker then uses your service account to send to your FCM project.
+
+<Info>The Nidaa Flutter SDK itself has no Firebase dependency. Firebase config lives only in your app.</Info>
