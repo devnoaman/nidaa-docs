@@ -26,10 +26,16 @@ await Nidaa.initialize(
   apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write only
 );
 
-final token = await FirebaseMessaging.instance.getToken(); // token from YOUR app
-await Nidaa.registerDevice(token: token!);
+// Your app supplies the push token (pseudocode):
+// Android: FCM token, e.g. via firebase_messaging in YOUR app (optional, not part of the SDK)
+// iOS path B: raw APNs hex token via your own MethodChannel (no Firebase)
+final String token = await myApp.getPushToken();
+
+await Nidaa.registerDevice(token: token);
 await Nidaa.setUserId('u_123'); // after login
 ```
+
+`nidaa_flutter` has zero Firebase dependencies. See [Flutter SDK](/sdk/flutter) for Android and iOS token examples.
 
 ## 4. Send from your backend
 

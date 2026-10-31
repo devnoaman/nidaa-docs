@@ -27,6 +27,7 @@ dependencies:
 ## Initialize & register
 
 ```dart
+// 1) Configure Nidaa. No network, no Firebase. Just your SDK key.
 await Nidaa.initialize(
   baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
   apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write ONLY
@@ -34,22 +35,51 @@ await Nidaa.initialize(
   debug: true,
 );
 
-// Android: FCM token from your app
+// 2) YOUR APP gets a push token, however it chooses (pseudocode):
+final String token = await myApp.getPushToken();
+
+// 3) Hand it to Nidaa. platform is detected automatically (android/ios).
+await Nidaa.registerDevice(token: token);
+
+// When your app sees a new token:
+myApp.onPushTokenRefresh((t) => Nidaa.updateToken(t));
+```
+
+<Info>`Nidaa.initialize` never talks to Firebase or APNs. The `nidaa_flutter` package has **zero Firebase dependencies**. Getting the token is your host app's job.</Info>
+
+### Android: FCM token (Firebase is an optional host-app dependency)
+
+On Android the token must be an FCM registration token. One common way is to add `firebase_messaging` to **your app's** `pubspec.yaml` (not part of the Nidaa SDK):
+
+```dart
+// In YOUR app, using YOUR optional firebase_messaging dependency:
 final token = await FirebaseMessaging.instance.getToken();
-await Nidaa.registerDevice(token: token!); // platform auto: android/ios
+if (token != null) await Nidaa.registerDevice(token: token);
 FirebaseMessaging.instance.onTokenRefresh.listen(Nidaa.updateToken);
+```
+
+### iOS path B: raw APNs hex token (no Firebase)
+
+When the engine sends iOS directly over APNs (`.p8`), register the **raw APNs device token as a hex string**. Get it natively, e.g. from `didRegisterForRemoteNotificationsWithDeviceToken` exposed through your own `MethodChannel`:
+
+```dart
+// YOUR app's platform channel (pseudocode). No Firebase involved.
+const channel = MethodChannel('myapp/apns');
+final String apnsHex = await channel.invokeMethod('getAPNSToken');
+await Nidaa.registerDevice(token: apnsHex);
 ```
 
 ## Forward messages and opens
 
-The SDK doesn't listen to pushes itself — forward what your app receives:
+The SDK doesn't listen to pushes itself. Your app forwards what it receives, from whatever push plugin it uses:
 
 ```dart
-FirebaseMessaging.onMessage.listen((m) => Nidaa.handleMessage(
-    NidaaMessage.fromData(m.data, title: m.notification?.title, body: m.notification?.body)));
-FirebaseMessaging.onMessageOpenedApp.listen((m) =>
-    Nidaa.handleOpen(NidaaMessage.fromData(m.data)));
-// and the launch message: if (initial != null) Nidaa.handleOpen(...)
+// Pseudocode: call these from YOUR app's push handlers.
+void onForegroundPush(Map<String, dynamic> data, {String? title, String? body}) =>
+    Nidaa.handleMessage(NidaaMessage.fromData(data, title: title, body: body));
+
+void onNotificationTapped(Map<String, dynamic> data) =>
+    Nidaa.handleOpen(NidaaMessage.fromData(data)); // also for the launch message
 
 Nidaa.onMessage.listen((m) => print('foreground: ${m.title}'));
 Nidaa.onOpen.listen((m) => router.go(m.deepLink ?? '/'));
