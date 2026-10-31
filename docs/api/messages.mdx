@@ -1,0 +1,89 @@
+---
+title: Messages API
+description: Send messages, read status, report opens.
+---
+
+# Messages
+
+## POST /v1/messages — send
+
+Scope: `messages:send`. Header `Idempotency-Key: <string ≤ 128>` (strongly recommended).
+
+Exactly one of `to.user_id`, `to.device_tokens`, `to.topic`:
+
+```json
+{
+  "to": { "user_id": "u_123" },
+  "priority": "transactional",
+  "ttl": 3600,
+  "notification": { "title": "سائقك وصل", "body": "السائق بانتظارك عند الباب" },
+  "data": { "order_id": "ord_789", "type": "driver_arrived" },
+  "deep_link": "sahel://orders/ord_789",
+  "collapse_key": "order_ord_789"
+}
+```
+
+- `to.device_tokens`: array, max 500 (final cap TBD). `to.topic`: rejected in Phase 1.
+- `priority`: `transactional` (default) | `marketing`.
+- `ttl`: seconds, 0–2419200; default 86400.
+- `data`: flat string map; total payload ≤ 4 KB.
+- Omit `notification` for a data-only / silent message.
+
+Response `202 Accepted`:
+
+```json
+{ "id": "0192…", "status": "queued" }
+```
+
+### Idempotency
+
+- Same `Idempotency-Key` + same body → `202` with the original `id` and header `Idempotent-Replayed: true`.
+- Same key + different body → `409 validation_error`.
+
+Errors: `400 validation_error`, `401 unauthorized`, `403 unauthorized` (missing scope), `429 rate_limited`.
+
+## GET /v1/messages/\{id\} — status
+
+Scope: `messages:read`.
+
+```json
+{
+  "id": "0192…",
+  "status": "completed",
+  "priority": "transactional",
+  "created_at": "2026-10-29T09:30:00Z",
+  "completed_at": "2026-10-29T09:30:01Z",
+  "counts": { "targets": 2, "sent": 2, "failed": 0, "delivered": 1, "opened": 1 },
+  "deliveries": [
+    { "device_id": "…", "platform": "ios", "status": "opened", "error_code": null, "updated_at": "…" }
+  ]
+}
+```
+
+Message status: `queued` → `processing` → `completed` / `partial` / `failed` / `no_targets`. `deliveries` capped at 100. `404` if not found in this environment.
+
+Delivery status: `accepted` (queued for provider), `sent` (APNs/FCM success), `delivered` (only when the SDK reports receipt), `opened` (SDK open receipt), `failed` (provider rejected).
+
+## POST /v1/messages/\{id\}/opens — open receipt
+
+Scope: `devices:write`. Sent automatically by the SDK's `handleOpen`.
+
+```json
+{ "token": "device-token", "opened_at": "2026-10-29T09:31:00Z" }
+```
+
+Response `202 Accepted`. Idempotent per (message, device).
+
+## Errors
+
+```json
+{ "error": { "code": "validation_error", "message": "to: exactly one of user_id, device_tokens, topic is required" } }
+```
+
+| code | HTTP |
+| --- | --- |
+| `unauthorized` | 401 / 403 |
+| `rate_limited` | 429 (`Retry-After`) |
+| `invalid_token` | 404 / 400 |
+| `validation_error` | 400 / 409 |
+| `provider_error` | 502 |

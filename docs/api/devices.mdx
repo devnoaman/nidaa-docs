@@ -1,0 +1,53 @@
+---
+title: Devices API
+description: Register, update and unregister device tokens.
+---
+
+# Devices
+
+All endpoints require scope `devices:write`. Tokens in paths are URL-encoded.
+
+## POST /v1/devices — register / upsert
+
+Upsert on (environment, token). Re-registering a disabled token re-enables it.
+
+```json
+{
+  "platform": "android",
+  "token": "fcm-registration-token",
+  "user_id": "u_123",
+  "locale": "ar-IQ",
+  "app_version": "3.4.1",
+  "tags": { "city": "baghdad" }
+}
+```
+
+`platform`: `ios` | `android`. `tags` are stored only in Phase 1.
+
+Response `201 Created` (new) / `200 OK` (updated):
+
+```json
+{ "id": "0192…", "token": "fcm-registration-token", "platform": "android", "user_id": "u_123", "disabled": false, "last_seen_at": "2026-10-29T09:30:00Z" }
+```
+
+Errors: `400 validation_error`, `401 unauthorized`, `429 rate_limited`.
+
+## DELETE /v1/devices/\{token\} — unregister
+
+Response `204 No Content`. Unknown token → `204` (idempotent).
+
+Alias: `POST /v1/devices/unregister` with `{ "token": "…" }`.
+
+## PATCH /v1/devices/\{token\} — bind / unbind user
+
+```json
+{ "user_id": "u_123" }
+```
+
+Send `{ "user_id": null }` to unbind on logout. May also update `locale`, `app_version`, `tags`.
+
+Response `200 OK` (device object). `404 invalid_token` if the token is not registered.
+
+## Token cleanup
+
+When APNs returns `410 Unregistered` / `400 BadDeviceToken`, or FCM returns `UNREGISTERED` / `INVALID_ARGUMENT`, the device is disabled and skipped until re-registered.

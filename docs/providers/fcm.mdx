@@ -1,0 +1,17 @@
+---
+title: FCM (Android)
+description: Customer-owned Firebase project.
+---
+
+# FCM
+
+**You own your Firebase project.** Nidaa does not provide a Firebase project for you, and you never send from the Firebase console.
+
+## Setup
+
+1. Use your own Firebase project for your Android app.
+2. `google-services.json` goes in **your app** so it can obtain FCM registration tokens (e.g. via `firebase_messaging`).
+3. In the console: **Environment → Providers → FCM**, upload the credential for that environment. The `project_id` must match your file.
+4. Pass the FCM token to `Nidaa.registerDevice(token: ...)`.
+
+<Info>The Nidaa SDK itself has no Firebase dependency — Firebase lives only in your app.</Info>

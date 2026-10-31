@@ -1,0 +1,29 @@
+---
+title: APNs (iOS)
+description: Token-based APNs with a .p8 key per environment.
+---
+
+# APNs
+
+Nidaa sends to iOS directly over APNs using your **`.p8` auth key**.
+
+## Setup
+
+In the console, per environment (**dev** and **prod**), upload:
+
+- the `.p8` key file,
+- Team ID (`team_id`), Key ID (`key_id`), Bundle ID (`bundle_id`),
+- sandbox flag (`use_sandbox`).
+
+## Sandbox vs production
+
+- **dev** builds (Xcode / debug) receive tokens from the APNs **sandbox** — set `use_sandbox` on.
+- **prod** (TestFlight / App Store) uses APNs **production**.
+
+A sandbox token will not work against production, and vice versa — keep environments separate.
+
+## Device token
+
+For direct APNs sending, register the **raw APNs device token as a hex string** with `Nidaa.registerDevice(token: ...)`.
+
+Credential errors (APNs `403`) fail the message with `provider_error` and raise an alert in the console; devices are not disabled.

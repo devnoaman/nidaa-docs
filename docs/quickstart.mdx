@@ -1,0 +1,55 @@
+---
+title: Quickstart
+description: From a new app to your first push.
+---
+
+# Quickstart
+
+## 1. Create an app in the console
+
+Create an app and pick the environment (`dev` or `prod`). Upload provider credentials — see [FCM](/providers/fcm) and [APNs](/providers/apns).
+
+## 2. Create two keys
+
+| Key | Scope | Where it lives |
+| --- | --- | --- |
+| SDK key | `devices:write` | Inside the app (inject via `--dart-define`) |
+| Server key | `messages:send` | Your backend only |
+
+The plaintext key is shown **once** at creation.
+
+## 3. Register a device from Flutter
+
+```dart
+await Nidaa.initialize(
+  baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
+  apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write only
+);
+
+final token = await FirebaseMessaging.instance.getToken(); // token from YOUR app
+await Nidaa.registerDevice(token: token!);
+await Nidaa.setUserId('u_123'); // after login
+```
+
+## 4. Send from your backend
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/messages \
+  -H "Authorization: Bearer $NIDAA_SERVER_KEY" \
+  -H "Idempotency-Key: order-ord_789-driver-arrived" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": { "user_id": "u_123" },
+    "priority": "transactional",
+    "notification": { "title": "سائقك وصل", "body": "السائق بانتظارك عند الباب" },
+    "data": { "order_id": "ord_789" }
+  }'
+```
+
+Response `202 Accepted`:
+
+```json
+{ "id": "0192…", "status": "queued" }
+```
+
+Check status with `GET /v1/messages/{id}` (requires `messages:read`). See [Messages](/api/messages).

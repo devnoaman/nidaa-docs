@@ -1,0 +1,81 @@
+---
+title: Flutter SDK
+description: nidaa_flutter — register tokens, bind users, post open receipts.
+---
+
+# nidaa_flutter
+
+Registers device tokens, binds users, and posts open receipts. **It never sends messages** — sending (`messages:send`) is server-side only.
+
+## Nidaa ≠ Firebase | نِداء مو Firebase
+
+The package has **zero Firebase dependencies**. Wiring is two things: **your SDK key** + **the push token you supply**.
+
+Token type must match how the engine sends for that platform:
+
+- **Android:** FCM registration token.
+- **iOS:** either the **raw APNs hex token** (engine sends directly via `.p8`) or an FCM token if your engine sends iOS through FCM.
+
+## Install
+
+```yaml
+dependencies:
+  nidaa_flutter:
+    path: ../nidaa_flutter
+```
+
+## Initialize & register
+
+```dart
+await Nidaa.initialize(
+  baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
+  apiKey: const String.fromEnvironment('NIDAA_SDK_KEY'), // devices:write ONLY
+  userId: currentUser?.id, // optional
+  debug: true,
+);
+
+// Android: FCM token from your app
+final token = await FirebaseMessaging.instance.getToken();
+await Nidaa.registerDevice(token: token!); // platform auto: android/ios
+FirebaseMessaging.instance.onTokenRefresh.listen(Nidaa.updateToken);
+```
+
+## Forward messages and opens
+
+The SDK doesn't listen to pushes itself — forward what your app receives:
+
+```dart
+FirebaseMessaging.onMessage.listen((m) => Nidaa.handleMessage(
+    NidaaMessage.fromData(m.data, title: m.notification?.title, body: m.notification?.body)));
+FirebaseMessaging.onMessageOpenedApp.listen((m) =>
+    Nidaa.handleOpen(NidaaMessage.fromData(m.data)));
+// and the launch message: if (initial != null) Nidaa.handleOpen(...)
+
+Nidaa.onMessage.listen((m) => print('foreground: ${m.title}'));
+Nidaa.onOpen.listen((m) => router.go(m.deepLink ?? '/'));
+```
+
+Open receipts need the message id in the push data as `nidaa_message_id` (or `message_id`).
+
+## Topics, users, opt-out
+
+```dart
+await Nidaa.subscribeToTopic('news');
+await Nidaa.setUserId('u_123'); // after login
+await Nidaa.clearUserId();      // on logout
+await Nidaa.unregister();       // opt-out
+```
+
+## SDK ↔ REST
+
+| SDK | REST |
+| --- | --- |
+| `initialize` | — (config only, no network) |
+| `registerDevice(token:)` / `updateToken(t)` / auto re-sync | `POST /v1/devices` (exponential backoff) |
+| `setUserId(id)` / `clearUserId()` | `PATCH /v1/devices/{token}` `{"user_id": id \| null}` |
+| `unregister()` | `DELETE /v1/devices/{token}` |
+| `subscribeToTopic` / `unsubscribeFromTopic` / `listTopics` | `PUT` / `DELETE` / `GET /v1/devices/{token}/topics[/{topic}]` |
+| `handleMessage(m)` → `onMessage` | — (local stream) |
+| `handleOpen(m)` → `onOpen` | `POST /v1/messages/{id}/opens` (once per id) |
+
+<Warning>Never put a `messages:send` key in an app. لا تضع مفتاح `messages:send` داخل التطبيق أبداً.</Warning>
