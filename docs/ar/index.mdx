@@ -3,6 +3,9 @@ title: ما هو نِداء
 description: نِداء منصة إشعارات Push مصممة للعراق أولاً.
 ---
 
+<div dir="rtl" lang="ar">
+
+
 # نِداء | Nidaa
 
 نِداء منصة إشعارات Push (SaaS) مصممة **للعراق أولاً**. يتعامل المطوّر مع نِداء عبر:
@@ -21,12 +24,16 @@ description: نِداء منصة إشعارات Push مصممة للعراق أ�
 
 ## هيكل الحسابات
 
+<div dir="ltr">
+
 ```
 org ──< app ──< environment (dev | prod) ──< api_key
                                          ├──< provider_credential (apns | fcm)
                                          ├──< device
                                          └──< message ──< message_delivery
 ```
+
+</div>
 
 البيئتان `dev` و`prod` منفصلتان تماماً (الأجهزة، الرسائل، بيانات المزوّد، المفاتيح).
 
@@ -47,3 +54,5 @@ org ──< app ──< environment (dev | prod) ──< api_key
 ## عنوان الخادم (Base URL)
 
 عنوان الإنتاج **لم يُحدَّد بعد (TBD)**. للتطوير المحلي، جذر المحرّك هو `http://127.0.0.1:8080`، وكل المسارات تحت `/v1`.
+
+</div>

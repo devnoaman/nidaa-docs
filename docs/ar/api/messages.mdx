@@ -3,6 +3,9 @@ title: الرسائل
 description: إرسال الرسائل وقراءة حالتها والإبلاغ عن الفتح.
 ---
 
+<div dir="rtl" lang="ar">
+
+
 # الرسائل
 
 ## POST /v1/messages — إرسال
@@ -10,6 +13,8 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 الصلاحية: `messages:send`. الترويسة `Idempotency-Key: <string ≤ 128>` (موصى بها بشدة).
 
 حدّد واحداً فقط من: `to.user_id` أو `to.device_tokens` أو `to.topic`:
+
+<div dir="ltr">
 
 ```json
 {
@@ -23,6 +28,8 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 }
 ```
 
+</div>
+
 - `to.device_tokens`: مصفوفة، حدّ أقصى 500 (الحد النهائي لم يُحدَّد). `to.topic`: مرفوض في المرحلة 1.
 - `priority`: `transactional` (الافتراضي) أو `marketing`.
 - `ttl`: بالثواني، من 0 إلى 2419200. الافتراضي 86400.
@@ -31,9 +38,13 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 
 الرد `202 Accepted`:
 
+<div dir="ltr">
+
 ```json
 { "id": "0192…", "status": "queued" }
 ```
+
+</div>
 
 ### منع التكرار (Idempotency)
 
@@ -45,6 +56,8 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 ## GET /v1/messages/\{id\} — الحالة
 
 الصلاحية: `messages:read`.
+
+<div dir="ltr">
 
 ```json
 {
@@ -60,6 +73,8 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 }
 ```
 
+</div>
+
 حالة الرسالة: `queued` ← `processing` ← `completed` / `partial` / `failed` / `no_targets`. قائمة `deliveries` محدودة بـ 100. يرجع `404` إذا لم توجد الرسالة في هذه البيئة.
 
 حالة التوصيل: `accepted` (في الطابور للمزوّد)، `sent` (نجح APNs/FCM)، `delivered` (فقط عندما يبلّغ الـ SDK)، `opened` (إيصال فتح من الـ SDK)، `failed` (رفضه المزوّد).
@@ -68,17 +83,25 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 
 الصلاحية: `devices:write`. يرسله الـ SDK تلقائياً عبر `handleOpen`.
 
+<div dir="ltr">
+
 ```json
 { "token": "device-token", "opened_at": "2026-10-29T09:31:00Z" }
 ```
+
+</div>
 
 الرد `202 Accepted`. لا يتكرر لنفس (الرسالة، الجهاز).
 
 ## الأخطاء
 
+<div dir="ltr">
+
 ```json
 { "error": { "code": "validation_error", "message": "to: exactly one of user_id, device_tokens, topic is required" } }
 ```
+
+</div>
 
 | code | HTTP |
 | --- | --- |
@@ -87,3 +110,5 @@ description: إرسال الرسائل وقراءة حالتها والإبلا�
 | `invalid_token` | 404 / 400 |
 | `validation_error` | 400 / 409 |
 | `provider_error` | 502 |
+
+</div>

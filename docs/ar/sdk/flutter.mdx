@@ -3,6 +3,9 @@ title: Flutter SDK
 description: nidaa_flutter لتسجيل التوكنات وربط المستخدمين وإيصالات الفتح.
 ---
 
+<div dir="rtl" lang="ar">
+
+
 # nidaa_flutter
 
 الحزمة تسجّل توكنات الأجهزة، وتربط المستخدمين، وترسل إيصالات الفتح. **لا ترسل الرسائل أبداً**. الإرسال (`messages:send`) من الخادم فقط.
@@ -18,13 +21,19 @@ description: nidaa_flutter لتسجيل التوكنات وربط المستخد
 
 ## التثبيت
 
+<div dir="ltr">
+
 ```yaml
 dependencies:
   nidaa_flutter:
     path: ../nidaa_flutter
 ```
 
+</div>
+
 ## التهيئة والتسجيل
+
+<div dir="ltr">
 
 ```dart
 // 1) Configure Nidaa. No network, no Firebase. Just your SDK key.
@@ -45,11 +54,15 @@ await Nidaa.registerDevice(token: token);
 myApp.onPushTokenRefresh((t) => Nidaa.updateToken(t));
 ```
 
+</div>
+
 <Info>الدالة `Nidaa.initialize` لا تتواصل مع Firebase ولا مع APNs. حزمة `nidaa_flutter` **بدون أي اعتماد على Firebase**. جلب التوكن مسؤولية تطبيقك.</Info>
 
 ### أندرويد: توكن FCM (Firebase اعتماد اختياري في تطبيقك)
 
 في أندرويد يجب أن يكون التوكن توكن FCM. طريقة شائعة: أضف `firebase_messaging` إلى `pubspec.yaml` **الخاص بتطبيقك** (وليس جزءاً من SDK نِداء):
+
+<div dir="ltr">
 
 ```dart
 // In YOUR app, using YOUR optional firebase_messaging dependency:
@@ -58,9 +71,13 @@ if (token != null) await Nidaa.registerDevice(token: token);
 FirebaseMessaging.instance.onTokenRefresh.listen(Nidaa.updateToken);
 ```
 
+</div>
+
 ### iOS المسار B: توكن APNs الخام بصيغة hex (بدون Firebase)
 
 عندما يرسل المحرّك إلى iOS مباشرة عبر APNs (`.p8`)، سجّل **توكن APNs الخام كنص hex**. اجلبه من الكود الأصلي، مثلاً من `didRegisterForRemoteNotificationsWithDeviceToken` عبر `MethodChannel` خاص بك:
+
+<div dir="ltr">
 
 ```dart
 // YOUR app's platform channel (pseudocode). No Firebase involved.
@@ -69,9 +86,13 @@ final String apnsHex = await channel.invokeMethod('getAPNSToken');
 await Nidaa.registerDevice(token: apnsHex);
 ```
 
+</div>
+
 ## تمرير الرسائل وحالات الفتح
 
 الـ SDK لا يستقبل الإشعارات بنفسه. تطبيقك يمرّر ما يستقبله من أي إضافة Push يستخدمها:
+
+<div dir="ltr">
 
 ```dart
 // Pseudocode: call these from YOUR app's push handlers.
@@ -85,9 +106,13 @@ Nidaa.onMessage.listen((m) => print('foreground: ${m.title}'));
 Nidaa.onOpen.listen((m) => router.go(m.deepLink ?? '/'));
 ```
 
+</div>
+
 إيصالات الفتح تحتاج معرّف الرسالة داخل بيانات الإشعار باسم `nidaa_message_id` (أو `message_id`).
 
 ## المواضيع والمستخدمون وإلغاء الاشتراك
+
+<div dir="ltr">
 
 ```dart
 await Nidaa.subscribeToTopic('news');
@@ -95,6 +120,8 @@ await Nidaa.setUserId('u_123'); // after login
 await Nidaa.clearUserId();      // on logout
 await Nidaa.unregister();       // opt-out
 ```
+
+</div>
 
 ## SDK ↔ REST
 
@@ -109,3 +136,5 @@ await Nidaa.unregister();       // opt-out
 | `handleOpen(m)` → `onOpen` | `POST /v1/messages/{id}/opens` (مرة واحدة لكل id) |
 
 <Warning>لا تضع مفتاح `messages:send` داخل التطبيق أبداً.</Warning>
+
+</div>

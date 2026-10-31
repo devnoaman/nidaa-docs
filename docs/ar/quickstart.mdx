@@ -3,6 +3,9 @@ title: البدء السريع
 description: من تطبيق جديد إلى أول إشعار.
 ---
 
+<div dir="rtl" lang="ar">
+
+
 # البدء السريع
 
 ## 1. أنشئ تطبيقاً في لوحة التحكم
@@ -20,6 +23,8 @@ description: من تطبيق جديد إلى أول إشعار.
 
 ## 3. سجّل الجهاز من Flutter
 
+<div dir="ltr">
+
 ```dart
 await Nidaa.initialize(
   baseUrl: 'http://127.0.0.1:8080', // engine root, no /v1
@@ -35,9 +40,13 @@ await Nidaa.registerDevice(token: token);
 await Nidaa.setUserId('u_123'); // after login
 ```
 
+</div>
+
 حزمة `nidaa_flutter` لا تعتمد على Firebase. تطبيقك هو من يجلب التوكن. راجع [Flutter SDK](/sdk/flutter) لأمثلة أندرويد وiOS.
 
 ## 4. أرسل من الخادم
+
+<div dir="ltr">
 
 ```bash
 curl -X POST http://127.0.0.1:8080/v1/messages \
@@ -52,10 +61,18 @@ curl -X POST http://127.0.0.1:8080/v1/messages \
   }'
 ```
 
+</div>
+
 الرد `202 Accepted`:
+
+<div dir="ltr">
 
 ```json
 { "id": "0192…", "status": "queued" }
 ```
 
+</div>
+
 تابع الحالة عبر `GET /v1/messages/{id}` (يحتاج `messages:read`). راجع [الرسائل](/api/messages).
+
+</div>
